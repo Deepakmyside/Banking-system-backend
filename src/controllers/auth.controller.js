@@ -1,5 +1,7 @@
 const userModel = require("../models/user.model")
 const jwt = require("jsonwebtoken")
+const emailService = require("../services/email.service")
+
 /**
  * - user register controller 
 *  - POST /api/auth/register
@@ -13,7 +15,7 @@ const jwt = require("jsonwebtoken")
    }) 
 
    if(isExists) {
-    return res.status(422).json({
+    return res.status(422).json({ 
         message:"User already exists with email.",
         status: "failed"
     })
@@ -36,6 +38,7 @@ const jwt = require("jsonwebtoken")
    },
    token
    })
+   await emailService.sendRegistrationEmail(user.email,user.name)
 }
 
 /**
