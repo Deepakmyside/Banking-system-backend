@@ -43,6 +43,8 @@ ledgerSchema.pre('updateOne', preventLegerModification);
 ledgerSchema.pre('deleteOne', preventLegerModification);
 ledgerSchema.pre('remove', preventLegerModification);
 ledgerSchema.pre('deleteMany', preventLegerModification);
+ledgerSchema.pre('updateMany', preventLegerModification),
+ledgerSchema.pre('findOneAndDelete',preventLegerModification ),
+ledgerScehma.pre('findOneAndReplace')
 
-
-const ledgerModel  = mongoose,model("leger", ledgerSchema);
+const ledgerModel  = mongoose.model("leger", ledgerSchema);
