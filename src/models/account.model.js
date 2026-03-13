@@ -19,7 +19,7 @@ const accountSchema = new mongoose.Schema({
     },
     currency: {
         type: String,
-        required: [true, "Currency is reuired for creating account"],
+        required: [true, "Currency is required for creating account"],
         default: "INR"
     }
 },{
