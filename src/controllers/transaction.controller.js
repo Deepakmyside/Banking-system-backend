@@ -2,7 +2,7 @@ const transactionModel = require("../models/transaction.model")
 const ledgerModel = require("../models/ledger.model")
 const emailService = require("../services/email.service")
 const accountModel = require("../models/account.model")
-
+const mongoose = require("mongoose")
 /* Create a new transaction
 THE 1--STEP TRANSFER FLOW:
 * 1. Validate request
@@ -84,4 +84,51 @@ if (!fromUserAccount || !toUserAccount) {
   
 //  * 4. Derive sender balance from ledger  
       const balance = await  fromUserAccount.getBalance()
-}
+      if(balanceData < amount) {
+         return  res.status(400).json({
+             message: 
+             `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}.`
+        })
+      }
+
+
+    //   * 5. Create transaction 
+
+
+    //  we using session startTransaction so that starting from point 5 to 6 to 7  to 8 if first 3 processes complete and any error came at marking trasaction COMPLETED  so half steps doesn't store in mongoose. with help of startTransaction session if any error came at 4th processs all first 3 processes will revert back 
+
+    const session =await mongoose.startSession()
+    session.startTransaction()
+
+    const transaction = await transactionModel.create({
+        fromAccount,
+        toAccount,
+        amount,
+        idempotencyKey,
+        status:"PENDING"
+    },{ session })
+
+      const debitLedgerEntry = await ledgerModel.create({
+        account: fromAccount,
+        amount: amount,
+        transaction : transaction._id,
+        type: "DEBIT"
+       }, {session})
+
+    const creditLedgereEntry = await ledgerModel.create({
+        account: toAccount,
+        amount: amount,
+        transaction: transaction._id,
+        type: "CREDIT"
+    } ,{session})
+
+    transaction.status = "COMPLETED"
+    await transaction.save({session})
+
+    await session.commitTransaction()
+    session.endSession()
+
+    //  Send Email notification
+
+    
+} 

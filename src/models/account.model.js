@@ -62,6 +62,13 @@ accountSchema.methods.getBalance = async function(){
             }
         }
     ])
+
+    //  If user is new and doesn't have any ledger entry then : 
+
+    if(balanceData.length === 0 ) {
+        return 0
+    }
+     return balanceData [0].balance
 }
 
 const accountModel = mongoose.model("account", accountSchema)
