@@ -91,9 +91,9 @@ if (!fromUserAccount || !toUserAccount) {
              `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}.`
         })
       }
-
-
-    //   * 5. Create transaction 
+       let transaction;
+    try {
+    //   * 5. Create transaction(PENDING) 
 
 
     //  we using session startTransaction so that starting from point 5 to 6 to 7  to 8 if first 3 processes complete and any error came at marking trasaction COMPLETED  so half steps doesn't store in mongoose. with help of startTransaction session if any error came at 4th processs all first 3 processes will revert back 
@@ -101,13 +101,13 @@ if (!fromUserAccount || !toUserAccount) {
     const session =await mongoose.startSession()
     session.startTransaction()
 
-    const [transaction] = await transactionModel.create([{
+     transaction = (await transactionModel.create([{
         fromAccount,
         toAccount,
         amount,
         idempotencyKey,
         status:"PENDING"
-    }],{ session })
+    }], {session}) ) [ 0 ]
 
       const debitLedgerEntry = await ledgerModel.create([{
         account: fromAccount,
@@ -116,6 +116,10 @@ if (!fromUserAccount || !toUserAccount) {
         type: "DEBIT"
        }], {session})
 
+       await (()=> {
+        return new Promise((resolve) => setTimeout(resolve, 10 * 1000));
+       })()
+
     const creditLedgereEntry = await ledgerModel.create([{
         account: toAccount,
         amount: amount,
@@ -123,15 +127,27 @@ if (!fromUserAccount || !toUserAccount) {
         type: "CREDIT"
     }] ,{session})
 
-    transaction.status = "COMPLETED"
-    await transaction.save({session})
+    await transactionModel.findOneAndUpdate(
+      { _id: transaction._id},
+      { status: "COMPLETED"},
+      { session }
+    )
 
     await session.commitTransaction()
     session.endSession()
 
+} catch(error) {
+    return res.status(400).json({
+        message: "Transaction is pending due to some reason, please retry after sometime"
+    })
+}
     //  Send Email notification
 
-    await emailService.sendTransactionEmail(user.email)
+    await emailService.sendTransactionEmail(req.user.email, req.user.name, amount, toAccount)
+    return res.status(201).json({
+        message: "Transaction completed successfully",
+        transaction: transaction
+    })
 } 
 
 async function createInitialFundsTransaction( req, res) {
@@ -150,7 +166,7 @@ async function createInitialFundsTransaction( req, res) {
      })
      
      console.log("To user account:", toUserAccount)
-     
+
      if(!toUserAccount){
         return res.status(400).json({
             message: " Invalid toAccount"
@@ -170,6 +186,7 @@ async function createInitialFundsTransaction( req, res) {
 
      const session = await mongoose.startSession()
         session.startTransaction()
+
      const transaction = new transactionModel({
       fromAccount : fromUserAccount._id, toAccount, amount, idempotencyKey,
       status: "PENDING",
