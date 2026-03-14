@@ -16,7 +16,7 @@ const ledgerSchema = new mongoose.Schema({
     },
     transaction: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: " transaction",
+        ref: "transaction",
         required: [true, "Ledger must be associated with a transaction"],
         index: true,
         immutable: true
@@ -24,8 +24,9 @@ const ledgerSchema = new mongoose.Schema({
     type: {
          type: String,
         enum: {
-            values: ["CREDIT", "DEBITED"],
-        message:" Type can be either CREDIT or DEBIT",
+            values: ["CREDIT", "DEBIT"],
+        message: "Type can be either CREDIT or DEBIT",
+
      },
     required: [true, "Ledger type is required"],
     immutable : true
@@ -43,10 +44,10 @@ ledgerSchema.pre('updateOne', preventLegerModification);
 ledgerSchema.pre('deleteOne', preventLegerModification);
 ledgerSchema.pre('remove', preventLegerModification);
 ledgerSchema.pre('deleteMany', preventLegerModification);
-ledgerSchema.pre('updateMany', preventLegerModification),
-ledgerSchema.pre('findOneAndDelete',preventLegerModification ),
-ledgerScehma.pre('findOneAndReplace')
+ledgerSchema.pre('updateMany', preventLegerModification);
+ledgerSchema.pre('findOneAndDelete',preventLegerModification );
+ledgerSchema.pre('findOneAndReplace',preventLegerModification);
 
-const ledgerModel  = mongoose.model("leger", ledgerSchema);
+const ledgerModel  = mongoose.model("ledger", ledgerSchema);
 
 module.exports = ledgerModel
