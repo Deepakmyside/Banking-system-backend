@@ -10,3 +10,7 @@ router.post("/register", authController.userRegisterController)
 router.post("/login", authController.userLoginController )
 console.log("login route hit");
 module.exports = router 
+
+//  POST /api/auth/logout 
+
+router.post("/logout", authController.userLogoutController)
