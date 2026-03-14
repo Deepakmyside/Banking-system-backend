@@ -28,7 +28,8 @@ const userSchema = new mongoose.Schema({
         immutable: true,
         select: false,
     }
-},  {
+},  
+   {
     timestamps: true
 })
 
